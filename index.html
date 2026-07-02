@@ -43,6 +43,13 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   // Error sink persists across replaceWith since it's on window, not the DOM.
   window.addEventListener('error', function(e) {
+    // Masked cross-origin errors ("Script error." with no filename) carry no
+    // actionable info and occur on iOS/file:// even when the page works —
+    // log them but never show the banner to the viewer.
+    if (!e || !e.message || e.message === 'Script error.' || (!e.filename && !e.error)) {
+      try { console.warn('[bundle] suppressed masked error:', e && e.message); } catch (x) {}
+      return;
+    }
     var p = document.body || document.documentElement;
     var d = document.getElementById('__bundler_err') || p.appendChild(document.createElement('div'));
     d.id = '__bundler_err';
